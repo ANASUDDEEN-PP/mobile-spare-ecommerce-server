@@ -11,7 +11,24 @@ const app = express();
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-app.use(cors());
+// Configure CORS to allow specific origins
+const allowedOrigins = [
+  'http://mobile-spare-ecommece-client-xi.vercel.app',
+  'http://localhost:5173'
+];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        return callback(null, true);
+      }
+      return callback(new Error('Not allowed by CORS'));
+    },
+    credentials: true,
+  })
+);
 
 // Import connections
 const connection = require('./connection/connection');
@@ -34,6 +51,8 @@ app.use('/product', productRoute);
 app.use('/cart', cartRoute);
 app.use('/address', addressRoute);
 app.use('/order', orderRoute);
+const healthRoute = require('./Routes/healthRoute');
+app.use('/health', healthRoute);
 
 // 404 Route (Catch-All)
 app.use((req, res, next) => {
