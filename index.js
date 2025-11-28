@@ -18,7 +18,8 @@ const allowedOrigins = [
   // common alternate spelling in case of typo
   'http://mobile-spare-ecommerce-client-xi.vercel.app',
   'https://mobile-spare-ecommerce-client-xi.vercel.app',
-  'http://localhost:5173'
+  'http://localhost:5173',
+  'https://ecommerce-mobile-e074.onrender.com'
 ];
 
 app.use(
@@ -68,3 +69,6 @@ const port = process.env.PORT || 8080;
 app.listen(port, () => {
   console.log(`📂 Server is running on port ${port}`);
 });
+
+
+// /product
