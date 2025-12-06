@@ -419,5 +419,26 @@ exports.getTrendingProducts = async (req, res) => {
   }
 };
 
+exports.deleteProducts = async(req, res) => {
+  try{
+    const { id } = req.params;
+
+    if(!id)
+      return res.status(404).json({ message : "ID is Required"});
+
+    const product = await productModel.findById(id);
+    if(!product)
+      return res.status(404).json({ message : "No Product Available"});
+
+    await productModel.findByIdAndDelete(id);
+    return res.status(200).json({
+      message : "Product Deleted Successfully"
+    })
+  }catch(err){
+    return res.status(500).json({
+      message : "Internal Server Error"
+    })
+  }
+}
 
 
