@@ -6,15 +6,32 @@ const sendNotify = require("../utils/sendNotify");
 
 exports.createProduct = async (req, res) => {
   try {
-    const { productName, description, collection, normalPrice, offerPrice, quantity, material, size, images, actualPrice,isFlashSale, isTrending } = req.body;
+    const {
+      productName,
+      description,
+      collection,
+      normalPrice,
+      offerPrice,
+      quantity,
+      material,
+      size,
+      images,
+      actualPrice,
+      isFlashSale,
+      isTrending,
+    } = req.body;
 
     // Validation
     if (!productName || !collection || !normalPrice || !quantity) {
-      return res.status(400).json({ message: "Please fill all required fields" });
+      return res
+        .status(400)
+        .json({ message: "Please fill all required fields" });
     }
 
     if (!images || !Array.isArray(images) || images.length === 0) {
-      return res.status(400).json({ message: "At least one image is required" });
+      return res
+        .status(400)
+        .json({ message: "At least one image is required" });
     }
 
     // Generate Product ID
@@ -27,7 +44,7 @@ exports.createProduct = async (req, res) => {
     } else {
       const lastPrd = await productModel.findOne().sort({ _id: -1 });
       const lastPrdId = lastPrd.ProductId?.split("/").pop();
-      const nextId = String(parseInt(lastPrdId) + 1).padStart(4, '0');
+      const nextId = String(parseInt(lastPrdId) + 1).padStart(4, "0");
       productId = `TLM/${year}/PRD/${nextId}`;
     }
 
@@ -45,37 +62,39 @@ exports.createProduct = async (req, res) => {
       Size: size || null,
       flashSale: isFlashSale,
       trending: isTrending,
-      rating: "0.0"
+      rating: "0.0",
     };
 
     const product = await productModel.create(productData);
 
     // Store base64 images directly in imageModel
-    const imageDocs = images.map(img => ({
+    const imageDocs = images.map((img) => ({
       imageId: product._id.toString(),
-      from: 'PRDIMG',
-      ImageUrl: img  // directly store the base64 string or data:image/... URL
+      from: "PRDIMG",
+      ImageUrl: img, // directly store the base64 string or data:image/... URL
     }));
 
     await imageModel.insertMany(imageDocs);
-    sendNotify({
-      productId: productData.ProductId,
-      productName: productData.ProductName,
-      Qty: productData.Quantity,
-      Price: product.OfferPrice
-    }, 'PRDAD');
+    sendNotify(
+      {
+        productId: productData.ProductId,
+        productName: productData.ProductName,
+        Qty: productData.Quantity,
+        Price: product.OfferPrice,
+      },
+      "PRDAD"
+    );
 
     return res.status(201).json({
       message: "Product created successfully",
       productId: product.ProductId,
-      images: images
+      images: images,
     });
-
   } catch (err) {
     console.error("Error creating product:", err);
     return res.status(500).json({
       message: "Internal Server Error",
-      error: process.env.NODE_ENV === 'development' ? err.message : undefined
+      error: process.env.NODE_ENV === "development" ? err.message : undefined,
     });
   }
 };
@@ -92,51 +111,50 @@ exports.getProductOrderedByCollection = async (req, res) => {
 
     // 2. Find products in this collection
     const products = await productModel.find({
-      CollectionName: collection.CollectionName
+      CollectionName: collection.CollectionName,
     });
 
     // 3. Get images for all products
-    const productIds = products.map(p => p._id);
+    const productIds = products.map((p) => p._id);
     const images = await imageModel.find({
-      imageId: { $in: productIds }
+      imageId: { $in: productIds },
     });
 
     // 4. Structure the response (using string comparison)
     const response = {
       collection: collection.CollectionName,
-      products: products.map(product => {
+      products: products.map((product) => {
         return {
           ...product.toObject(),
-          images: images.filter(img =>
-            img.imageId.toString() === product._id.toString()
-          )
+          images: images.filter(
+            (img) => img.imageId.toString() === product._id.toString()
+          ),
         };
-      })
+      }),
     };
 
     return res.status(200).json(response);
-
   } catch (err) {
     console.error("Error in getProductOrderedByCollection:", err);
     return res.status(500).json({
       message: "Internal Server Error",
-      error: err.message
+      error: err.message,
     });
   }
-}
+};
 
-exports.getAllProductToAdmin = async(req, res) => {
-  try{
+exports.getAllProductToAdmin = async (req, res) => {
+  try {
     const products = await productModel.find({}).lean();
     return res.status(200).json({
-      products
-    })
-  } catch(err){
+      products,
+    });
+  } catch (err) {
     return res.status(404).json({
-      message : "Internal Server Error"
-    })
+      message: "Internal Server Error",
+    });
   }
-}
+};
 
 exports.getAllProducts = async (req, res) => {
   try {
@@ -144,8 +162,8 @@ exports.getAllProducts = async (req, res) => {
 
     const images = await imageModel.find({}).lean();
 
-    const allProducts = products.map(prd => {
-      const image = images.find(img => img.imageId === prd._id.toString());
+    const allProducts = products.map((prd) => {
+      const image = images.find((img) => img.imageId === prd._id.toString());
       return {
         id: prd._id,
         productName: prd.ProductName,
@@ -153,7 +171,7 @@ exports.getAllProducts = async (req, res) => {
         normalPrice: prd.NormalPrice,
         offerPrice: prd.OfferPrice,
         rating: prd.rating,
-        image: image ? image.ImageUrl : null
+        image: image ? image.ImageUrl : null,
       };
     });
 
@@ -161,7 +179,7 @@ exports.getAllProducts = async (req, res) => {
   } catch (err) {
     console.error(err);
     return res.status(500).json({
-      message: "Internal Server Error"
+      message: "Internal Server Error",
     });
   }
 };
@@ -169,20 +187,19 @@ exports.getAllProducts = async (req, res) => {
 exports.getProductById = async (req, res) => {
   try {
     const { id } = req.params;
-    if (!id)
-      return res.status(404).json({ message: "Invalid Id or No Id" })
+    if (!id) return res.status(404).json({ message: "Invalid Id or No Id" });
     const product = await productModel.findById(id);
     const images = await imageModel.find({ imageId: product._id });
     return res.status(200).json({
       product,
-      images
-    })
+      images,
+    });
   } catch (err) {
     return res.status(404).json({
-      message: "Internal Server Error"
-    })
+      message: "Internal Server Error",
+    });
   }
-}
+};
 
 exports.postComments = async (req, res) => {
   try {
@@ -192,21 +209,21 @@ exports.postComments = async (req, res) => {
     if (!UserId) {
       return res.status(401).json({
         success: false,
-        message: "User ID is required"
+        message: "User ID is required",
       });
     }
 
     if (!Comment || Comment.trim().length === 0) {
       return res.status(201).json({
         success: false,
-        message: "Comment text is required"
+        message: "Comment text is required",
       });
     }
 
     if (!ProductId) {
       return res.status(401).json({
         success: false,
-        message: "Product ID is required"
+        message: "Product ID is required",
       });
     }
 
@@ -221,13 +238,19 @@ exports.postComments = async (req, res) => {
       Likes: 0, // Initialize likes to 0
       Date, // Use current timestamp
       Comment: Comment.trim(),
-      Avatar: Avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(UserId)}&background=random`
+      Avatar:
+        Avatar ||
+        `https://ui-avatars.com/api/?name=${encodeURIComponent(
+          UserId
+        )}&background=random`,
     };
 
     // Save to database
     const newComment = await commentModel.create(commentsData);
 
-    const productData = await productModel.findById({ _id: commentsData.ProductId })
+    const productData = await productModel.findById({
+      _id: commentsData.ProductId,
+    });
     sendNotify({ UserId, productName: productData.ProductId }, "CMTPST");
 
     return res.status(200).json({
@@ -239,15 +262,14 @@ exports.postComments = async (req, res) => {
         Rating: newComment.Rating,
         Comment: newComment.Comment,
         Date: newComment.Date,
-        Avatar: newComment.Avatar
-      }
+        Avatar: newComment.Avatar,
+      },
     });
-
   } catch (err) {
     console.error("Error posting comment:", err);
     return res.status(500).json({
       success: false,
-      message: "Internal server error"
+      message: "Internal server error",
     });
   }
 };
@@ -255,27 +277,26 @@ exports.postComments = async (req, res) => {
 exports.getComments = async (req, res) => {
   try {
     const { id } = req.params;
-    if (!await productModel.findById(id)) {
+    if (!(await productModel.findById(id))) {
       return res.status(404).json({ message: "Product not found" });
     }
-    const comments = await commentModel.find({ ProductId: id })
+    const comments = await commentModel
+      .find({ ProductId: id })
       .sort({ Date: -1 });
     return res.status(200).json({ comments });
   } catch (err) {
     console.error("Error fetching comments:", err);
     return res.status(500).json({
-      message: "Internal Server Error"
+      message: "Internal Server Error",
     });
   }
-}
+};
 
 exports.getRandomSixProduct = async (req, res) => {
   try {
-    const products = await productModel.aggregate([
-      { $sample: { size: 6 } }
-    ]);
+    const products = await productModel.aggregate([{ $sample: { size: 6 } }]);
 
-    const productIds = products.map(p => p._id);
+    const productIds = products.map((p) => p._id);
 
     const images = await imageModel.find(
       { imageId: { $in: productIds } },
@@ -283,23 +304,23 @@ exports.getRandomSixProduct = async (req, res) => {
     );
 
     const response = {
-      products: products.map(prd => {
-        const productImage = images.find(img =>
-          img.imageId.toString() === prd._id.toString()
+      products: products.map((prd) => {
+        const productImage = images.find(
+          (img) => img.imageId.toString() === prd._id.toString()
         );
 
         return {
           ...prd,
-          imageUrl: productImage?.ImageUrl || null
+          imageUrl: productImage?.ImageUrl || null,
         };
-      })
+      }),
     };
 
     return res.status(200).json(response);
   } catch (err) {
     return res.status(500).json({
       message: "Internal Server Error",
-      error: err.message
+      error: err.message,
     });
   }
 };
@@ -340,25 +361,24 @@ exports.changeProductImage = async (req, res) => {
   try {
     const { id } = req.params;
 
-    if (!await productModel.findById(id))
-      return res.status(404).json({ message: "NoInvalidId" })
+    if (!(await productModel.findById(id)))
+      return res.status(404).json({ message: "NoInvalidId" });
 
     const imageData = {
       imageId: id,
       from: "PRDIMG",
-      ImageUrl: req.body.imageURL
-    }
+      ImageUrl: req.body.imageURL,
+    };
     await imageModel.create(imageData);
     return res.status(200).json({
-      message: "Image Updated..."
-    })
-
+      message: "Image Updated...",
+    });
   } catch (err) {
     return res.status(404).json({
-      message: "Internal Server Error"
-    })
+      message: "Internal Server Error",
+    });
   }
-}
+};
 
 exports.getProductsOrderedByFlashSale = async (req, res) => {
   try {
@@ -398,8 +418,8 @@ exports.getTrendingProducts = async (req, res) => {
     const products = await productModel.find({ trending: true }).lean();
     const images = await imageModel.find({}).lean();
 
-    const trendProducts = products.map(prd => {
-      const image = images.find(img => img.imageId === prd._id.toString());
+    const trendProducts = products.map((prd) => {
+      const image = images.find((img) => img.imageId === prd._id.toString());
 
       return {
         id: prd._id,
@@ -419,26 +439,62 @@ exports.getTrendingProducts = async (req, res) => {
   }
 };
 
-exports.deleteProducts = async(req, res) => {
-  try{
+exports.deleteProducts = async (req, res) => {
+  try {
     const { id } = req.params;
 
-    if(!id)
-      return res.status(404).json({ message : "ID is Required"});
+    if (!id) return res.status(404).json({ message: "ID is Required" });
 
     const product = await productModel.findById(id);
-    if(!product)
-      return res.status(404).json({ message : "No Product Available"});
+    if (!product)
+      return res.status(404).json({ message: "No Product Available" });
 
     await productModel.findByIdAndDelete(id);
     return res.status(200).json({
-      message : "Product Deleted Successfully"
-    })
-  }catch(err){
+      message: "Product Deleted Successfully",
+    });
+  } catch (err) {
     return res.status(500).json({
-      message : "Internal Server Error"
-    })
+      message: "Internal Server Error",
+    });
   }
-}
+};
 
+exports.updateProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      ProductName,
+      Description,
+      CollectionName,
+      OfferPrice,
+      NormalPrice,
+      ActualPrice,
+      Quantity,
+      Material,
+      Size,
+    } = req.body;
+    
+    if(!id)
+      return res.status(404).json({ message : "ID is Required"});
 
+    const updatedproduct = {
+      ProductName, Description, CollectionName, ActualPrice, NormalPrice,
+      OfferPrice, Quantity, Material, Size
+    }
+
+    await productModel.findByIdAndUpdate(
+      { _id : id },
+      { $set: updatedproduct },
+      { new: true }
+    )
+
+    return res.status(200).json({
+      message : "Product Updated Successfully"
+    })
+  } catch (err) {
+    return res.status(500).json({
+      message: "Internal Server Error",
+    });
+  }
+};
