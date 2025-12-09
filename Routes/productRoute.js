@@ -7,7 +7,7 @@ router.get('/get/collection/product/:id', productController.getProductOrderedByC
 router.get('/get/all', productController.getAllProducts);
 router.get('/admin/get/all/products', productController.getAllProductToAdmin)
 router.get('/get/:id', productController.getProductById);
-router.post('/post/product', productController.postComments);
+router.post('/post/comment', productController.postComments);
 router.get('/get/product/comments/:id', productController.getComments);
 router.get('/get/random/product', productController.getRandomSixProduct);
 router.put('/change/image/:id', productController.changeProductImage);
