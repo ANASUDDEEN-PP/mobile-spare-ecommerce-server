@@ -3,6 +3,7 @@ const imageModel = require("../Models/ImageModel");
 const collectionModel = require("../Models/collectionModel");
 const commentModel = require("../Models/commentsModel");
 const sendNotify = require("../utils/sendNotify");
+const ImageModel = require("../Models/ImageModel");
 
 exports.createProduct = async (req, res) => {
   try {
@@ -203,10 +204,26 @@ exports.getProductById = async (req, res) => {
     if (!id) return res.status(404).json({ message: "Invalid Id or No Id" });
     const product = await productModel.findById(id);
     const images = await imageModel.find({ imageId: product._id });
+    const productCollection = await collectionModel.findById({ _id: product.CollectionName });
+    
+    const productList = {
+      _id: product._id,
+      ProductId: product.ProductId,
+      ProductName: product.ProductName,
+      Description: product.Description,
+      CollectionName: productCollection.CollectionName,
+      ActualPrice: product.ActualPrice,
+      NormalPrice: product.NormalPrice,
+      OfferPrice: product.OfferPrice,
+      Quantity: product.Quantity,
+      Material: product.Material,
+      Size: product.Size,
+      rating: product.rating
+    }
     return res.status(200).json({
-      product,
-      images,
-    });
+      productList,
+      images
+    })
   } catch (err) {
     return res.status(404).json({
       message: "Internal Server Error",
