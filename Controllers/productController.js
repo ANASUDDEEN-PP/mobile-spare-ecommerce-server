@@ -146,9 +146,22 @@ exports.getProductOrderedByCollection = async (req, res) => {
 exports.getAllProductToAdmin = async (req, res) => {
   try {
     const products = await productModel.find({}).lean();
+    const collection = await collectionModel.find({}).lean();
+    
+    const productList = products.map((prd) => {
+      const collectionName = collection.find((collct) => collct._id?.toString() === prd.CollectionName?.toString());
+
+      return {
+        _id: prd._id,
+        ProductId: prd.ProductId,
+        ProductName: prd.ProductName,
+        collectionName: collectionName.CollectionName,
+        Quantity: prd.Quantity
+      }
+    })
     return res.status(200).json({
-      products,
-    });
+      productList
+    })
   } catch (err) {
     return res.status(404).json({
       message: "Internal Server Error",
