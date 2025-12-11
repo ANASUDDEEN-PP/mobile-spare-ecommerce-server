@@ -111,7 +111,7 @@ exports.getProductOrderedByCollection = async (req, res) => {
 
     // 2. Find products in this collection
     const products = await productModel.find({
-      CollectionName: collection.CollectionName,
+      CollectionName: collection._id,
     });
 
     // 3. Get images for all products
