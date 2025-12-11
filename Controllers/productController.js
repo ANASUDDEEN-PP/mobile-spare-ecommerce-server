@@ -175,13 +175,15 @@ exports.getAllProducts = async (req, res) => {
     const products = await productModel.aggregate([{ $sample: { size: 15 } }]);
 
     const images = await imageModel.find({}).lean();
+    const collectionData = await collectionModel.find({}).lean();
 
     const allProducts = products.map((prd) => {
       const image = images.find((img) => img.imageId === prd._id.toString());
+      const individualCollection = collectionData.find((intCl) => intCl._id?.toString() === prd.CollectionName?.toString())
       return {
         id: prd._id,
         productName: prd.ProductName,
-        collection: prd.CollectionName,
+        collection: individualCollection.CollectionName,
         normalPrice: prd.NormalPrice,
         offerPrice: prd.OfferPrice,
         rating: prd.rating,
