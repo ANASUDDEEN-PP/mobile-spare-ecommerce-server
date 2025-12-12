@@ -1,5 +1,7 @@
 const collectionModel = require("../Models/collectionModel");
 const productModel = require("../Models/productModel");
+const imageModel = require("../Models/ImageModel");
+
 
 exports.createCollection = async (req, res) => {
   try {
@@ -108,3 +110,43 @@ exports.getAllCollectionWithCount = async (req, res) => {
     });
   }
 };
+
+exports.getRecommendedData = async(req, res) => {
+  try{
+    const { productId, collectionName } = req.query;
+    //check the collection Name is availble on collectionModel
+    const collectionId = await collectionModel.findOne({ CollectionName: collectionName });
+    if(!collectionId)
+      return res.status(200).json({});
+
+    //get the products available curresponding in the collectionId
+    const products = await productModel.find({ 
+      CollectionName: collectionId._id,
+      _id: { $ne: productId }
+    });
+    const images = await imageModel.find({}).lean();
+    
+    const recommendedProduct = products.map((prd) => {
+      const image = images.find((img) => img.imageId === prd._id.toString());
+      // const individualCollection = collectionData.find((intCl) => intCl._id?.toString() === prd.CollectionName?.toString())
+      return {
+        id: prd._id,
+        productName: prd.ProductName,
+        // collection: individualCollection.CollectionName,
+        normalPrice: prd.NormalPrice,
+        offerPrice: prd.OfferPrice,
+        rating: prd.rating,
+        image: image ? image.ImageUrl : null,
+      };
+    })
+    return res.status(200).json({
+      recommendedProduct
+    })
+
+  } catch(err){
+    return res.status(500).json({
+      message : "Internal Server error",
+      err
+    })
+  }
+}

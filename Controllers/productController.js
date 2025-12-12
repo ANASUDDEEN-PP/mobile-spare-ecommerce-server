@@ -3,7 +3,6 @@ const imageModel = require("../Models/ImageModel");
 const collectionModel = require("../Models/collectionModel");
 const commentModel = require("../Models/commentsModel");
 const sendNotify = require("../utils/sendNotify");
-const ImageModel = require("../Models/ImageModel");
 
 exports.createProduct = async (req, res) => {
   try {
