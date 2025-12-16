@@ -70,7 +70,6 @@ exports.addToCart = async (req, res) => {
   }
 };
 
-
 exports.getCartOfUser = async (req, res) => {
   try {
     const { id } = req.params;
@@ -168,4 +167,38 @@ exports.removeCartElements = async(req, res) => {
             message : "Internal Server Error"
         })
     }
+}
+
+exports.getUnAuthoroziedCart = async(req, res) => {
+  try{
+    const { cart } = req.body;
+    console.log(cart)
+    
+    if(!cart)
+      return res.status(404).json({ message : "Item id is required" });
+
+    const products = await productModel.find({}).lean();
+    const images = await imageModel.find({}).lean();
+
+    const mergedCartData = cart.map((cartItem) => {
+      const product = products.find((prd) => prd._id?.toString() === cartItem.itemId?.toString());
+      const image = images.find((img) => img.imageId?.toString() === cartItem.itemId?.toString());
+      return {
+        cartId: "",
+        prdId: product?._id,
+        prdName: product?.ProductName,
+        prdImg: image?.ImageUrl || null,
+        Qty: cartItem?.quantity || 0,
+        price: product?.OfferPrice || 0
+      }
+    });
+
+    return res.status(200).json({
+      cartItems: mergedCartData
+    })
+  } catch(err){
+    return res.status(500).json({
+      message : "Internal Server Error"
+    })
+  }
 }
