@@ -13,13 +13,8 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Configure CORS to allow specific origins
 const allowedOrigins = [
-  'http://mobile-spare-ecommece-client-xi.vercel.app',
-  'https://mobile-spare-ecommece-client-xi.vercel.app',
-  // common alternate spelling in case of typo
-  'http://mobile-spare-ecommerce-client-xi.vercel.app',
-  'https://mobile-spare-ecommerce-client-xi.vercel.app',
   'http://localhost:5173',
-  'https://ecommerce-mobile-e074.onrender.com'
+  'https://mobile-spare-ecommece-client.vercel.app/'
 ];
 
 app.use(
