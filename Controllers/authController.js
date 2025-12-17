@@ -4,12 +4,14 @@ const otpModel = require("../Models/OTPModel");
 const DateFormat = require("../utils/dateFormat");
 const sendNotify = require("../utils/sendNotify");
 const sendMail = require("../utils/sendMail");
+const setCartItems = require("../utils/setCartItems");
 
 exports.userRegister = async (req, res) => {
   try {
     const { email, password, confirmPassword, name, Mobile } =
       req.body.formData || {};
     const isLogin = req.body.isLogin;
+    const cart = req.body.cart;
 
     if (isLogin === true) {
       // --- LOGIN SECTION ---
@@ -33,6 +35,10 @@ exports.userRegister = async (req, res) => {
       if (!userExist) {
         return res.status(201).json({ message: "User does not exist" });
       }
+
+      //add the cart elements to the user cart
+      setCartItems(cart, userExist._id);
+
       const userWithoutPassword = { ...userExist.toObject() };
       delete userWithoutPassword.Password;
       const profileImg = await profileModel.findOne({ userId : userWithoutPassword._id, from: "USRDBI" })
