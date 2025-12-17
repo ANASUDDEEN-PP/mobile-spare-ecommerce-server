@@ -172,7 +172,7 @@ exports.removeCartElements = async(req, res) => {
 exports.getUnAuthoroziedCart = async(req, res) => {
   try{
     const { cart } = req.body;
-    console.log(cart)
+    // console.log(cart)
     
     if(!cart)
       return res.status(404).json({ message : "Item id is required" });

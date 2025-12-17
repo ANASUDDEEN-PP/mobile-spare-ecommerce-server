@@ -2,6 +2,7 @@ const productModel = require("../Models/productModel");
 const imageModel = require("../Models/ImageModel");
 const collectionModel = require("../Models/collectionModel");
 const commentModel = require("../Models/commentsModel");
+const attachModel = require("../Models/attachmentModel");
 const sendNotify = require("../utils/sendNotify");
 
 exports.createProduct = async (req, res) => {
@@ -147,21 +148,23 @@ exports.getAllProductToAdmin = async (req, res) => {
   try {
     const products = await productModel.find({}).lean();
     const collection = await collectionModel.find({}).lean();
-    
+
     const productList = products.map((prd) => {
-      const collectionName = collection.find((collct) => collct._id?.toString() === prd.CollectionName?.toString());
+      const collectionName = collection.find(
+        (collct) => collct._id?.toString() === prd.CollectionName?.toString()
+      );
 
       return {
         _id: prd._id,
         ProductId: prd.ProductId,
         ProductName: prd.ProductName,
         collectionName: collectionName.CollectionName,
-        Quantity: prd.Quantity
-      }
-    })
+        Quantity: prd.Quantity,
+      };
+    });
     return res.status(200).json({
-      productList
-    })
+      productList,
+    });
   } catch (err) {
     return res.status(404).json({
       message: "Internal Server Error",
@@ -178,7 +181,9 @@ exports.getAllProducts = async (req, res) => {
 
     const allProducts = products.map((prd) => {
       const image = images.find((img) => img.imageId === prd._id.toString());
-      const individualCollection = collectionData.find((intCl) => intCl._id?.toString() === prd.CollectionName?.toString())
+      const individualCollection = collectionData.find(
+        (intCl) => intCl._id?.toString() === prd.CollectionName?.toString()
+      );
       return {
         id: prd._id,
         productName: prd.ProductName,
@@ -205,8 +210,10 @@ exports.getProductById = async (req, res) => {
     if (!id) return res.status(404).json({ message: "Invalid Id or No Id" });
     const product = await productModel.findById(id);
     const images = await imageModel.find({ imageId: product._id });
-    const productCollection = await collectionModel.findById({ _id: product.CollectionName });
-    
+    const productCollection = await collectionModel.findById({
+      _id: product.CollectionName,
+    });
+
     const productList = {
       _id: product._id,
       ProductId: product.ProductId,
@@ -219,12 +226,12 @@ exports.getProductById = async (req, res) => {
       Quantity: product.Quantity,
       Material: product.Material,
       Size: product.Size,
-      rating: product.rating
-    }
+      rating: product.rating,
+    };
     return res.status(200).json({
       productList,
-      images
-    })
+      images,
+    });
   } catch (err) {
     return res.status(404).json({
       message: "Internal Server Error",
@@ -234,7 +241,9 @@ exports.getProductById = async (req, res) => {
 
 exports.postComments = async (req, res) => {
   try {
-    const { Avatar, Comment, ProductId, Rating, UserId, Date } = req.body;
+    // console.log(req.body);
+    const { Avatar, Comment, ProductId, Rating, UserId, Date, Attachments } =
+      req.body;
 
     // Validate required fields
     if (!UserId) {
@@ -271,13 +280,22 @@ exports.postComments = async (req, res) => {
       Comment: Comment.trim(),
       Avatar:
         Avatar ||
-        `https://ui-avatars.com/api/?name=${encodeURIComponent(
-          UserId
-        )}&background=random`,
+        '',
     };
 
-    // Save to database
+    // Save to database 
     const newComment = await commentModel.create(commentsData);
+
+    const attachmentsArray = Array.isArray(Attachments)
+      ? Attachments
+      : [Attachments];
+
+    const attachDocs = attachmentsArray.map((url) => ({
+      commentId: newComment._id,
+      url,
+    }));
+
+    await attachModel.insertMany(attachDocs);
 
     const productData = await productModel.findById({
       _id: commentsData.ProductId,
@@ -308,13 +326,39 @@ exports.postComments = async (req, res) => {
 exports.getComments = async (req, res) => {
   try {
     const { id } = req.params;
-    if (!(await productModel.findById(id))) {
+
+    const productExists = await productModel.findById(id);
+    if (!productExists) {
       return res.status(404).json({ message: "Product not found" });
     }
+
     const comments = await commentModel
       .find({ ProductId: id })
-      .sort({ Date: -1 });
-    return res.status(200).json({ comments });
+      .sort({ Date: -1 })
+      .lean();
+
+    const attachments = await attachModel.find({}).lean();
+
+    // Group attachments by commentId
+    const attachmentMap = attachments.reduce((acc, item) => {
+      const key = item.commentId.toString();
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(item);
+      return acc;
+    }, {});
+
+    const filteredComment = comments.map((cmt) => ({
+      ProductId: cmt.ProductId,
+      UserId: cmt.UserId,
+      Rating: cmt.Rating,
+      Likes: cmt.Likes || 0,
+      Date: cmt.Date,
+      Comment: cmt.Comment,
+      attachment: attachmentMap[cmt._id.toString()] || [], // ✅ always array
+      Avatar: cmt.Avatar || "",
+    }));
+
+    return res.status(200).json({ filteredComment });
   } catch (err) {
     console.error("Error fetching comments:", err);
     return res.status(500).json({
@@ -322,6 +366,7 @@ exports.getComments = async (req, res) => {
     });
   }
 };
+
 
 exports.getRandomSixProduct = async (req, res) => {
   try {
@@ -505,24 +550,30 @@ exports.updateProduct = async (req, res) => {
       Material,
       Size,
     } = req.body;
-    
-    if(!id)
-      return res.status(404).json({ message : "ID is Required"});
+
+    if (!id) return res.status(404).json({ message: "ID is Required" });
 
     const updatedproduct = {
-      ProductName, Description, CollectionName, ActualPrice, NormalPrice,
-      OfferPrice, Quantity, Material, Size
-    }
+      ProductName,
+      Description,
+      CollectionName,
+      ActualPrice,
+      NormalPrice,
+      OfferPrice,
+      Quantity,
+      Material,
+      Size,
+    };
 
     await productModel.findByIdAndUpdate(
-      { _id : id },
+      { _id: id },
       { $set: updatedproduct },
       { new: true }
-    )
+    );
 
     return res.status(200).json({
-      message : "Product Updated Successfully"
-    })
+      message: "Product Updated Successfully",
+    });
   } catch (err) {
     return res.status(500).json({
       message: "Internal Server Error",

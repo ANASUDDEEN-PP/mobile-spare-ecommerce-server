@@ -19,6 +19,9 @@ const commentSchema = new Schema({
     Comment : {
         type: String
     },
+    attachment: {
+        type: String
+    },
     Avatar : {
         type: String
     }
