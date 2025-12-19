@@ -4,7 +4,7 @@ const otpModel = require("../Models/OTPModel");
 const DateFormat = require("../utils/dateFormat");
 const sendNotify = require("../utils/sendNotify");
 const sendMail = require("../utils/sendMail");
-const setCartItems = require("../utils/setCartItems");
+const setLocalItems = require("../utils/setCartItems");
 
 exports.userRegister = async (req, res) => {
   try {
@@ -12,6 +12,7 @@ exports.userRegister = async (req, res) => {
       req.body.formData || {};
     const isLogin = req.body.isLogin;
     const cart = req.body.cart;
+    const wishlist = req.body.wishlist;
 
     if (isLogin === true) {
       // --- LOGIN SECTION ---
@@ -37,7 +38,8 @@ exports.userRegister = async (req, res) => {
       }
 
       //add the cart elements to the user cart
-      setCartItems(cart, userExist._id);
+      setLocalItems("cart",cart, userExist._id);
+      setLocalItems("fav",wishlist, userExist._id);
 
       const userWithoutPassword = { ...userExist.toObject() };
       delete userWithoutPassword.Password;
