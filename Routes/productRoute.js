@@ -16,6 +16,7 @@ router.get('/get/trending/products', productController.getTrendingProducts);
 router.delete('/delete/:id', productController.deleteProducts);
 router.put('/update/:id', productController.updateProduct)
 
+
 module.exports = router;
 
 

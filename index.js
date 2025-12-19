@@ -44,7 +44,9 @@ const CollectionRoute = require('./Routes/collectionRoute');
 const productRoute = require("./Routes/productRoute");
 const cartRoute = require("./Routes/cartRoute");
 const addressRoute = require('./Routes/addressRoute');
-const orderRoute = require("./Routes/orderRoute")
+const orderRoute = require("./Routes/orderRoute");
+const brandRoute = require("./Routes/brandRoute");
+const healthRoute = require('./Routes/healthRoute');
 
 app.use('/', commonRoute);
 app.use('/auth', AuthRoute);
@@ -53,8 +55,8 @@ app.use('/product', productRoute);
 app.use('/cart', cartRoute);
 app.use('/address', addressRoute);
 app.use('/order', orderRoute);
-const healthRoute = require('./Routes/healthRoute');
 app.use('/health', healthRoute);
+app.use('/brand', brandRoute);
 
 // 404 Route (Catch-All)
 app.use((req, res, next) => {
