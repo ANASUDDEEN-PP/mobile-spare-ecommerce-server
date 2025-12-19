@@ -8,5 +8,6 @@ router.post('/create', brandController.createBrand);
 router.get('/get/all', brandController.getBrands);
 router.put('/update/:id', brandController.updateBrand)
 router.delete('/delete/:id', brandController.deleteBrand);
+router.get('/get/products/:id', brandController.getProductOrderedByBrand);
 
 module.exports = router;

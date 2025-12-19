@@ -34,6 +34,9 @@ const productSchema = new Schema({
     flashSale: {
         type: String
     },
+    brand: {
+        type: String
+    },
     trending : {
         type: String
     },

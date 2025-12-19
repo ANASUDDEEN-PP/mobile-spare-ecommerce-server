@@ -4,6 +4,7 @@ const collectionModel = require("../Models/collectionModel");
 const commentModel = require("../Models/commentsModel");
 const attachModel = require("../Models/attachmentModel");
 const sendNotify = require("../utils/sendNotify");
+const brandModel = require("../Models/brandModel");
 
 exports.createProduct = async (req, res) => {
   try {
@@ -19,6 +20,7 @@ exports.createProduct = async (req, res) => {
       images,
       actualPrice,
       isFlashSale,
+      brand,
       isTrending,
     } = req.body;
 
@@ -61,6 +63,7 @@ exports.createProduct = async (req, res) => {
       Quantity: parseInt(quantity),
       Material: material || null,
       Size: size || null,
+      brand,
       flashSale: isFlashSale,
       trending: isTrending,
       rating: "0.0",
@@ -100,50 +103,6 @@ exports.createProduct = async (req, res) => {
   }
 };
 
-exports.getProductOrderedByCollection = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    // 1. Find the collection
-    const collection = await collectionModel.findById(id);
-    if (!collection) {
-      return res.status(404).json({ message: "Collection not found" });
-    }
-
-    // 2. Find products in this collection
-    const products = await productModel.find({
-      CollectionName: collection._id,
-    });
-
-    // 3. Get images for all products
-    const productIds = products.map((p) => p._id);
-    const images = await imageModel.find({
-      imageId: { $in: productIds },
-    });
-
-    // 4. Structure the response (using string comparison)
-    const response = {
-      collection: collection.CollectionName,
-      products: products.map((product) => {
-        return {
-          ...product.toObject(),
-          images: images.filter(
-            (img) => img.imageId.toString() === product._id.toString()
-          ),
-        };
-      }),
-    };
-
-    return res.status(200).json(response);
-  } catch (err) {
-    console.error("Error in getProductOrderedByCollection:", err);
-    return res.status(500).json({
-      message: "Internal Server Error",
-      error: err.message,
-    });
-  }
-};
-
 exports.getAllProductToAdmin = async (req, res) => {
   try {
     const products = await productModel.find({}).lean();
@@ -177,17 +136,17 @@ exports.getAllProducts = async (req, res) => {
     const products = await productModel.aggregate([{ $sample: { size: 15 } }]);
 
     const images = await imageModel.find({}).lean();
-    const collectionData = await collectionModel.find({}).lean();
+    const brandData = await brandModel.find({}).lean();
 
     const allProducts = products.map((prd) => {
       const image = images.find((img) => img.imageId === prd._id.toString());
-      const individualCollection = collectionData.find(
-        (intCl) => intCl._id?.toString() === prd.CollectionName?.toString()
+      const individualCollection = brandData.find(
+        (brd) => brd._id?.toString() === prd.brand?.toString()
       );
       return {
         id: prd._id,
         productName: prd.ProductName,
-        collection: individualCollection.CollectionName,
+        collection: individualCollection.name,
         normalPrice: prd.NormalPrice,
         offerPrice: prd.OfferPrice,
         rating: prd.rating,
@@ -210,8 +169,8 @@ exports.getProductById = async (req, res) => {
     if (!id) return res.status(404).json({ message: "Invalid Id or No Id" });
     const product = await productModel.findById(id);
     const images = await imageModel.find({ imageId: product._id });
-    const productCollection = await collectionModel.findById({
-      _id: product.CollectionName,
+    const productBrand = await brandModel.findById({
+      _id: product.brand,
     });
 
     const productList = {
@@ -219,7 +178,7 @@ exports.getProductById = async (req, res) => {
       ProductId: product.ProductId,
       ProductName: product.ProductName,
       Description: product.Description,
-      CollectionName: productCollection.CollectionName,
+      CollectionName: productBrand.name,
       ActualPrice: product.ActualPrice,
       NormalPrice: product.NormalPrice,
       OfferPrice: product.OfferPrice,

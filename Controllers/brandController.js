@@ -1,4 +1,6 @@
 const brandModel = require("../Models/brandModel");
+const productModel = require("../Models/productModel");
+const imageModel = require("../Models/ImageModel");
 
 exports.createBrand = async(req, res) => {
     try{
@@ -75,3 +77,47 @@ exports.deleteBrand = async(req, res) => {
         })
     }
 }
+
+exports.getProductOrderedByBrand = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // 1. Find the collection
+    const brand = await brandModel.findById(id);
+    if (!brand) {
+      return res.status(404).json({ message: "Brand not found" });
+    }
+
+    // 2. Find products in this collection
+    const products = await productModel.find({
+      brand: brand._id,
+    });
+
+    // 3. Get images for all products
+    const productIds = products.map((p) => p._id);
+    const images = await imageModel.find({
+      imageId: { $in: productIds },
+    });
+
+    // 4. Structure the response (using string comparison)
+    const response = {
+      brandName: brand.name,
+      products: products.map((product) => {
+        return {
+          ...product.toObject(),
+          images: images.filter(
+            (img) => img.imageId.toString() === product._id.toString()
+          ),
+        };
+      }),
+    };
+
+    return res.status(200).json(response);
+  } catch (err) {
+    console.error("Error in getProductOrderedByCollection:", err);
+    return res.status(500).json({
+      message: "Internal Server Error",
+      error: err.message,
+    });
+  }
+};
