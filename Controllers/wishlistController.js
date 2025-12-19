@@ -135,13 +135,11 @@ exports.getAuthorizedWishlist = async (req, res) => {
 exports.checkStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    if(!id)
-        return res.status(404).json({ message : "Invalid ID" });
+    if (!id) return res.status(404).json({ message: "Invalid ID" });
 
-    const checkStatus = await wishlistModel.findOne({ Item: id })
-    if(!checkStatus)
-        return res.status(200).json({ isStatus : false });
-    return res.status(201).json({ isStatus : true });
+    const checkStatus = await wishlistModel.findOne({ Item: id });
+    if (!checkStatus) return res.status(200).json({ isStatus: false });
+    return res.status(201).json({ isStatus: true });
   } catch (err) {
     return res.status(500).json({
       message: "Internal Server Error",
@@ -149,3 +147,20 @@ exports.checkStatus = async (req, res) => {
   }
 };
 
+exports.deleteWishlist = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { itemId } = req.query;
+
+    if (!id) return res.status(404).json({ message: "Invalid ID" });
+
+    await wishlistModel.findOneAndDelete({UserId: id, Item: itemId});
+    return res.status(200).json({
+      message: "Product Deleted from the Favorite",
+    });
+  } catch (err) {
+    return res.status(500).json({
+      message: "Internal Server Error",
+    });
+  }
+};
