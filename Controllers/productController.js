@@ -169,16 +169,19 @@ exports.getProductById = async (req, res) => {
     if (!id) return res.status(404).json({ message: "Invalid Id or No Id" });
     const product = await productModel.findById(id);
     const images = await imageModel.find({ imageId: product._id });
-    const productBrand = await brandModel.findById({
-      _id: product.brand,
+    const productCollection = await collectionModel.findById({
+      _id: product.CollectionName,
     });
+    const productBrand = await brandModel.findById({
+      _id: product.brand
+    })
 
     const productList = {
       _id: product._id,
       ProductId: product.ProductId,
       ProductName: product.ProductName,
       Description: product.Description,
-      CollectionName: productBrand.name,
+      CollectionName: productCollection.CollectionName,
       ActualPrice: product.ActualPrice,
       NormalPrice: product.NormalPrice,
       OfferPrice: product.OfferPrice,
@@ -186,6 +189,7 @@ exports.getProductById = async (req, res) => {
       Material: product.Material,
       Size: product.Size,
       rating: product.rating,
+      brand: productBrand.name
     };
     return res.status(200).json({
       productList,
