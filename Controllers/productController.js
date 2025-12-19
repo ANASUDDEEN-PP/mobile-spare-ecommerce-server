@@ -330,7 +330,6 @@ exports.getComments = async (req, res) => {
   }
 };
 
-
 exports.getRandomSixProduct = async (req, res) => {
   try {
     const products = await productModel.aggregate([{ $sample: { size: 6 } }]);
