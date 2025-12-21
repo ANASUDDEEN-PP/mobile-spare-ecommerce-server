@@ -150,3 +150,23 @@ exports.getFilteredBrand = async (req, res) => {
     });
   }
 };
+
+exports.getBrandsToBanner = async (req, res) => {
+  try {
+    const brand = await brandModel.find({}).lean();
+    const filterBrand = brand.map((brd) => {
+      return {
+        _id: brd._id || "",
+        name : brd.name || ""
+      }
+    })
+    return res.status(200).json({
+      filterBrand
+    });
+  } catch (err) {
+    return res.status(500).json({
+      message: "Internal Server error",
+      err,
+    });
+  }
+};
