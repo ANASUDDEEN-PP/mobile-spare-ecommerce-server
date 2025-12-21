@@ -9,5 +9,6 @@ router.get('/get/all', brandController.getBrands);
 router.put('/update/:id', brandController.updateBrand)
 router.delete('/delete/:id', brandController.deleteBrand);
 router.get('/get/products/:id', brandController.getProductOrderedByBrand);
+router.get('/get/filter/brand', brandController.getFilteredBrand);
 
 module.exports = router;

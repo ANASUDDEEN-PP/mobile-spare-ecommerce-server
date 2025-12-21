@@ -151,6 +151,8 @@ exports.getAllProducts = async (req, res) => {
         offerPrice: prd.OfferPrice,
         rating: prd.rating,
         image: image ? image.ImageUrl : null,
+        brand: individualCollection._id,
+        Material: prd.Material
       };
     });
 
