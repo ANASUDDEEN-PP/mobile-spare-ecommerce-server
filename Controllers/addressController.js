@@ -36,7 +36,7 @@ exports.getAddressByUserId = async(req, res) => {
 exports.getAddressByIdOrder = async(req, res) => {
     try{
         const { id } = req.params;
-        console.log(id)
+        // console.log(id)
         if(!await addressModel.findById(id))
             return res.status(404).json({ message : "InvalidID" });
         const address = await addressModel.findById(id);
