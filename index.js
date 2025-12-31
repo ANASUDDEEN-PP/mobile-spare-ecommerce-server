@@ -14,6 +14,7 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 // Configure CORS to allow specific origins
 const allowedOrigins = [
   "http://localhost:5173",
+  "http://localhost:5174",
   "https://mobile-spare-ecommece-client.vercel.app",
 ];
 
