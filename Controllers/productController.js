@@ -107,11 +107,16 @@ exports.getAllProductToAdmin = async (req, res) => {
   try {
     const products = await productModel.find({}).lean();
     const collection = await collectionModel.find({}).lean();
+    const brands = await brandModel.find({}).lean();
 
     const productList = products.map((prd) => {
       const collectionName = collection.find(
         (collct) => collct._id?.toString() === prd.CollectionName?.toString()
       );
+
+      const brandName = brands.find(
+        (brd) => brd._id?.toString() === prd.brand?.toString()
+      )
 
       return {
         _id: prd._id,
@@ -119,6 +124,7 @@ exports.getAllProductToAdmin = async (req, res) => {
         ProductName: prd.ProductName,
         collectionName: collectionName.CollectionName,
         Quantity: prd.Quantity,
+        brand: brandName.name || ""
       };
     });
     return res.status(200).json({
